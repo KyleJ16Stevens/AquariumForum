@@ -1,0 +1,21 @@
+﻿@model AquariumForum.Models.Comment
+
+@{
+    ViewData["Title"] = "Add a Comment";
+}
+
+<h2>Add a Comment</h2>
+
+<form asp-action="Create">
+    <input type="hidden" asp-for="DiscussionId" />
+
+    <div class="form-group">
+        <label asp-for="Content" class="control-label">Comment</label>
+        <textarea asp-for="Content" class="form-control" rows="4"></textarea>
+        <span asp-validation-for="Content" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Post Comment</button>
+</form>
+
+<a asp-controller="Discussions" asp-action="Index">Back to Discussions</a>

@@ -21,6 +21,6 @@ namespace AquariumForum.Models
 
         //navigation property many comments belong to one discussion
         [ForeignKey("DiscussionId")]
-        public Discussion Discussion { get; set; }
+        public Discussion? Discussion { get; set; }
     }
 }

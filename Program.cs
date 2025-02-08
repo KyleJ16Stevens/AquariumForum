@@ -1,4 +1,11 @@
+using AquariumForum.Data; 
+using Microsoft.EntityFrameworkCore;
+using AquariumForum.Models;
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContext<AquariumContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
