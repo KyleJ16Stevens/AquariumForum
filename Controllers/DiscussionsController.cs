@@ -46,6 +46,7 @@ namespace AquariumForum.Controllers
         }
 
         // GET: Discussions/Create
+        [HttpGet]
         public IActionResult Create()
         {
             return View();
@@ -56,12 +57,37 @@ namespace AquariumForum.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("DiscussionId,Title,Content,ImageFilename,CreateDate")] Discussion discussion)
+        public async Task<IActionResult> Create(Discussion discussion, IFormFile? imageFile)
         {
             if (ModelState.IsValid)
             {
+                if (imageFile != null && imageFile.Length > 0)
+                {
+                    // Ensure the images folder exists
+                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
+                    if (!Directory.Exists(uploadsFolder))
+                    {
+                        Directory.CreateDirectory(uploadsFolder);
+                    }
+
+                    // Generate unique filename (GUID + original extension)
+                    var uniqueFilename = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
+                    var filePath = Path.Combine(uploadsFolder, uniqueFilename);
+
+                    // Save the file
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await imageFile.CopyToAsync(fileStream);
+                    }
+
+                    // Save the filename in the database
+                    discussion.ImageFilename = uniqueFilename;
+                }
+
+                discussion.CreateDate = DateTime.Now; // Set creation time
                 _context.Add(discussion);
                 await _context.SaveChangesAsync();
+
                 return RedirectToAction(nameof(Index));
             }
             return View(discussion);
