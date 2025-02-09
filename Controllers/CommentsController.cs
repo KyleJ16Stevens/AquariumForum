@@ -35,8 +35,6 @@ namespace AquariumForum.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Content,DiscussionId")] Comment comment)
         {
-            Console.WriteLine($"Content: {comment.Content}");
-            Console.WriteLine($"DiscussionId: {comment.DiscussionId}");
 
             if (ModelState.IsValid)
             {
@@ -45,13 +43,10 @@ namespace AquariumForum.Controllers
                 _context.Add(comment);
                 await _context.SaveChangesAsync();
 
-                return RedirectToAction("Details", "Discussions", new { id = comment.DiscussionId });
+                return RedirectToAction("GetDiscussion", "Home", new { id = comment.DiscussionId });
             }
 
-            foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
-            {
-                Console.WriteLine($"Validation Error: {error.ErrorMessage}");
-            }
+
 
             return View(comment);
         }

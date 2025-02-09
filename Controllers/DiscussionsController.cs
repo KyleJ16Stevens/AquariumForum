@@ -61,6 +61,8 @@ namespace AquariumForum.Controllers
         {
             if (ModelState.IsValid)
             {
+                discussion.CreateDate = DateTime.Now; // Set creation time
+
                 if (imageFile != null && imageFile.Length > 0)
                 {
                     // Ensure the images folder exists
@@ -84,7 +86,7 @@ namespace AquariumForum.Controllers
                     discussion.ImageFilename = uniqueFilename;
                 }
 
-                discussion.CreateDate = DateTime.Now; // Set creation time
+                
                 _context.Add(discussion);
                 await _context.SaveChangesAsync();
 
