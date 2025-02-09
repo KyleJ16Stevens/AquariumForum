@@ -37,6 +37,9 @@ namespace AquariumForum.Controllers
                 return NotFound();
             }
 
+            // Sort comments in descending order
+            discussion.Comments = discussion.Comments.OrderByDescending(c => c.CreateDate).ToList();
+
             return View(discussion);
         }
     }
