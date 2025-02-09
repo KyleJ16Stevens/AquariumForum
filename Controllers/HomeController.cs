@@ -1,32 +1,43 @@
-using System.Diagnostics;
-using AquariumForum.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using AquariumForum.Data;
+using AquariumForum.Models;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace AquariumForum.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
+        private readonly AquariumContext _context;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(AquariumContext context)
         {
-            _logger = logger;
+            _context = context;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            var discussions = await _context.Discussions
+                .Include(d => d.Comments) // Load comments for count
+                .OrderByDescending(d => d.CreateDate) // Sort by newest
+                .ToListAsync();
+
+            return View(discussions);
         }
 
-        public IActionResult Privacy()
+        public async Task<IActionResult> GetDiscussion(int id)
         {
-            return View();
-        }
+            var discussion = await _context.Discussions
+                .Include(d => d.Comments)
+                .FirstOrDefaultAsync(d => d.DiscussionId == id);
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            if (discussion == null)
+            {
+                return NotFound();
+            }
+
+            return View(discussion);
         }
     }
 }
