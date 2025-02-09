@@ -114,7 +114,7 @@ namespace AquariumForum.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("DiscussionId,Title,Content,ImageFilename,CreateDate")] Discussion discussion)
+        public async Task<IActionResult> Edit(int id, Discussion discussion, IFormFile? imageFile)
         {
             if (id != discussion.DiscussionId)
             {
@@ -125,12 +125,45 @@ namespace AquariumForum.Controllers
             {
                 try
                 {
+                    if (imageFile != null && imageFile.Length > 0)
+                    {
+                        //ensure the images folder exists
+                        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
+
+                        //generate unique filename (GUID + original extension)
+                        var uniqueFilename = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
+                        var filePath = Path.Combine(uploadsFolder, uniqueFilename);
+
+                        //save the new file
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await imageFile.CopyToAsync(fileStream);
+                        }
+
+                        //delete the old image
+                        if (!string.IsNullOrEmpty(discussion.ImageFilename))
+                        {
+                            var oldImagePath = Path.Combine(uploadsFolder, discussion.ImageFilename);
+                            if (System.IO.File.Exists(oldImagePath))
+                            {
+                                System.IO.File.Delete(oldImagePath);
+                            }
+                        }
+
+                        //save the new filename
+                        discussion.ImageFilename = uniqueFilename;
+                    }
+
                     _context.Update(discussion);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!DiscussionExists(discussion.DiscussionId))
+                    if (!_context.Discussions.Any(e => e.DiscussionId == discussion.DiscussionId))
                     {
                         return NotFound();
                     }

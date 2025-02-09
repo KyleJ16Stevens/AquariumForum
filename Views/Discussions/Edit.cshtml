@@ -10,7 +10,7 @@
 <hr />
 <div class="row">
     <div class="col-md-4">
-        <form asp-action="Edit">
+        <form asp-action="Edit" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="DiscussionId" />
             <div class="form-group">
@@ -24,10 +24,18 @@
                 <span asp-validation-for="Content" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="ImageFilename" class="control-label"></label>
-                <input asp-for="ImageFilename" class="form-control" />
-                <span asp-validation-for="ImageFilename" class="text-danger"></span>
+                <label class="control-label">Upload New Image</label>
+                <input type="file" name="imageFile" class="form-control" accept="image/*" />
             </div>
+
+            <!-- Show current image if it exists -->
+            @if (!string.IsNullOrEmpty(Model.ImageFilename))
+            {
+                <div class="mt-2">
+                    <p><strong>Current Image Filename:</strong> @Model.ImageFilename</p>
+                    <img src="~/images/@Model.ImageFilename" alt="Current Image" class="img-thumbnail" style="max-width: 200px; height: auto;" />
+                </div>
+            }
             <div class="form-group">
                 <label asp-for="CreateDate" class="control-label"></label>
                 <input asp-for="CreateDate" class="form-control" />
