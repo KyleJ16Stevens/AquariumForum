@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Http;
+using AquariumForum.Models;
 
 namespace AquariumForum.Areas.Identity.Data
 {
@@ -22,5 +23,7 @@ namespace AquariumForum.Areas.Identity.Data
 
         [NotMapped] // Prevents EF from adding this to the database
         public IFormFile? ImageFile { get; set; }
+
+        public ICollection<Discussion> Discussions { get; set; } = new List<Discussion>();
     }
 }

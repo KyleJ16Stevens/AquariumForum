@@ -19,8 +19,9 @@ namespace AquariumForum.Controllers
         public async Task<IActionResult> Index()
         {
             var discussions = await _context.Discussions
-                .Include(d => d.Comments) // Load comments for count
-                .OrderByDescending(d => d.CreateDate) // Sort by newest
+                .Include(d => d.User) //  Include discussion owner
+                .Include(d => d.Comments) //  Load comments for count
+                .OrderByDescending(d => d.CreateDate) //  Sort by newest first
                 .ToListAsync();
 
             return View(discussions);
@@ -29,7 +30,9 @@ namespace AquariumForum.Controllers
         public async Task<IActionResult> GetDiscussion(int id)
         {
             var discussion = await _context.Discussions
+                .Include(d => d.User) // Include discussion owner
                 .Include(d => d.Comments)
+                    .ThenInclude(c => c.User) // Include comment owners
                 .FirstOrDefaultAsync(d => d.DiscussionId == id);
 
             if (discussion == null)
@@ -37,10 +40,29 @@ namespace AquariumForum.Controllers
                 return NotFound();
             }
 
-            // Sort comments in descending order
+            //sort comments in descending order (newest first)
             discussion.Comments = discussion.Comments.OrderByDescending(c => c.CreateDate).ToList();
 
             return View(discussion);
+        }
+        public async Task<IActionResult> Profile(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                return NotFound();
+            }
+
+            var user = await _context.Users
+                .Include(u => u.Discussions) 
+                .ThenInclude(d => d.Comments) 
+                .FirstOrDefaultAsync(u => u.Id == id);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            return View(user);
         }
     }
 }

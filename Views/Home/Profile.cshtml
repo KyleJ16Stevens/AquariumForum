@@ -1,0 +1,57 @@
+﻿@model AquariumForum.Areas.Identity.Data.User
+
+@{
+    ViewData["Title"] = @Model.Name + "'s Profile";
+}
+
+<h1>@Model.Name's Profile</h1>
+
+<img src="@(string.IsNullOrEmpty(Model.ImageFilename) ? "/images/default-profile.png" : $"/profile_pics/{Model.ImageFilename}")"
+     alt="Profile Picture" class="rounded-circle" width="150" height="150">
+
+<p><strong>Name:</strong> @Model.Name</p>
+<p><strong>Location:</strong> @Model.Location</p>
+
+<hr>
+
+<h3>@Model.Name's Discussions</h3>
+
+@if (Model.Discussions != null && Model.Discussions.Any())
+{
+    <div class="container">
+        <div class="row">
+            @foreach (var discussion in Model.Discussions)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        @if (!string.IsNullOrEmpty(discussion.ImageFilename))
+                        {
+                            <img src="~/images/@discussion.ImageFilename" alt="Thumbnail" class="card-img-top" style="max-height: 150px; object-fit: cover;">
+                        }
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <a asp-controller="Home" asp-action="GetDiscussion" asp-route-id="@discussion.DiscussionId">
+                                    @discussion.Title
+                                </a>
+                            </h5>
+                            <p class="card-text">
+                                <strong>@discussion.Comments.Count</strong> comments
+                            </p>
+                            <p class="card-text">
+                                <small class="text-muted">Created on @discussion.CreateDate.ToString("MMM dd, yyyy hh:mm tt")</small>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <p>No discussions yet.</p>
+}
+
+<hr>
+
+<a asp-controller="Home" asp-action="Index" class="btn btn-secondary">Back to Home</a>

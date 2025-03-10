@@ -5,6 +5,16 @@
 }
 
 <h2>@Model.Title</h2>
+
+<!-- isplay Discussion Owner -->
+<div class="d-flex align-items-center mb-3">
+    <img src="@(string.IsNullOrEmpty(Model.User?.ImageFilename) ? "/images/default-profile.png" : $"/profile_pics/{Model.User.ImageFilename}")"
+         alt="Profile Picture" class="rounded-circle" width="50" height="50">
+    <a asp-controller="Users" asp-action="Profile" asp-route-id="@Model.ApplicationUserId" class="ms-2">
+        @Model.User?.Name
+    </a>
+</div>
+
 <h3 class="text-muted">@Model.Content</h3>
 
 @if (!string.IsNullOrEmpty(Model.ImageFilename))
@@ -16,7 +26,7 @@
 
 <hr />
 
-<!--Add Comment" link moved above the comment list -->
+<!-- Add Comment" link moved above the comment list -->
 <a asp-controller="Comments" asp-action="Create" asp-route-discussionId="@Model.DiscussionId" class="btn btn-primary mb-3">
     Add Comment
 </a>
@@ -29,6 +39,15 @@
         @foreach (var comment in Model.Comments) // Sorted in descending order
         {
             <li class="list-group-item">
+                <!-- Display Comment Owner -->
+                <div class="d-flex align-items-center">
+                    <img src="@(string.IsNullOrEmpty(comment.User?.ImageFilename) ? "/images/default-profile.png" : $"/profile_pics/{comment.User.ImageFilename}")"
+                         alt="Profile Picture" class="rounded-circle" width="30" height="30">
+                    <a asp-controller="Home" asp-action="Profile" asp-route-id="@comment.ApplicationUserId" class="ms-2">
+                        @comment.User?.Name
+                    </a>
+                </div>
+
                 <p>@comment.Content</p>
                 <p><small>Posted on @comment.CreateDate.ToString("MMM dd, yyyy hh:mm tt")</small></p>
             </li>

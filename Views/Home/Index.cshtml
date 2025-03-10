@@ -22,6 +22,16 @@
                                 @discussion.Title
                             </a>
                         </h5>
+
+                     
+                        <div class="d-flex align-items-center mb-2">
+                            <img src="@(string.IsNullOrEmpty(discussion.User?.ImageFilename) ? "/images/default-profile.png" : $"/profile_pics/{discussion.User.ImageFilename}")"
+                                 alt="Profile Picture" class="rounded-circle" width="40" height="40">
+                            <a asp-controller="Home" asp-action="Profile" asp-route-id="@discussion.ApplicationUserId" class="ms-2">
+                                @discussion.User?.Name
+                            </a>
+                        </div>
+
                         <p class="card-text">
                             <strong>@discussion.Comments.Count</strong> comments
                         </p>
