@@ -4,6 +4,7 @@ using AquariumForum.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AquariumForum.Migrations
 {
     [DbContext(typeof(AquariumContext))]
-    partial class AquariumContextModelSnapshot : ModelSnapshot
+    [Migration("20250309155236_UpdateIdentityUser")]
+    partial class UpdateIdentityUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -135,13 +138,7 @@ namespace AquariumForum.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("DiscussionId");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("Discussions");
                 });
@@ -292,17 +289,6 @@ namespace AquariumForum.Migrations
                         .IsRequired();
 
                     b.Navigation("Discussion");
-                });
-
-            modelBuilder.Entity("AquariumForum.Models.Discussion", b =>
-                {
-                    b.HasOne("AquariumForum.Areas.Identity.Data.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
