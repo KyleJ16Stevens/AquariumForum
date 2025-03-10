@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using AquariumForum.Areas.Identity.Data;
-using Microsoft.AspNetCore.Identity;
 
 namespace AquariumForum.Models
 {
@@ -24,15 +23,12 @@ namespace AquariumForum.Models
         [Required]
         public DateTime CreateDate { get; set; } = DateTime.Now; // Autoset date
 
-        // 🔹 Add UserId to link discussion to its creator
-        [Required]
-        [ForeignKey("UserId")]
-        public string? UserId { get; set; } // Make it nullable
+        // User Foreign Key
+        public string? ApplicationUserId { get; set; }
 
-
-        // 🔹 Navigation property to Identity User
-        [ForeignKey("UserId")]
-        public virtual User User { get; set; }
+        // Navigation property to Identity User
+        [ForeignKey("ApplicationUserId")]
+        public virtual User? User { get; set; }
 
         // Navigation property: One discussion has many comments
         public ICollection<Comment> Comments { get; set; } = new List<Comment>();

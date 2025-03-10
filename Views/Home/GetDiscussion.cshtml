@@ -16,7 +16,7 @@
 
 <hr />
 
-<!-- ✅ "Add Comment" link moved above the comment list -->
+<!--Add Comment" link moved above the comment list -->
 <a asp-controller="Comments" asp-action="Create" asp-route-discussionId="@Model.DiscussionId" class="btn btn-primary mb-3">
     Add Comment
 </a>
@@ -26,7 +26,7 @@
 @if (Model.Comments.Any())
 {
     <ul class="list-group">
-        @foreach (var comment in Model.Comments) // ✅ Sorted in descending order
+        @foreach (var comment in Model.Comments) // Sorted in descending order
         {
             <li class="list-group-item">
                 <p>@comment.Content</p>

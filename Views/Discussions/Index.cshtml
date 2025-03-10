@@ -1,56 +1,48 @@
 ﻿@model IEnumerable<AquariumForum.Models.Discussion>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "My Threads";
 }
 
-<h1>Index</h1>
+<h1>My Threads</h1>
 
 <p>
-    <a asp-action="Create">Create New</a>
+    <a asp-action="Create" class="btn btn-primary">Create New</a>
 </p>
+
 <table class="table">
     <thead>
         <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Title)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Content)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ImageFilename)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreateDate)
-            </th>
-            <th></th>
+            <th>@Html.DisplayNameFor(model => model.Title)</th>
+            <th>@Html.DisplayNameFor(model => model.Content)</th>
+            <th>@Html.DisplayNameFor(model => model.ImageFilename)</th>
+            <th>@Html.DisplayNameFor(model => model.CreateDate)</th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Title)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Content)
-            </td>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@Html.DisplayFor(modelItem => item.Title)</td>
+                <td>@Html.DisplayFor(modelItem => item.Content)</td>
                 <td>
                     @if (!string.IsNullOrEmpty(item.ImageFilename))
                     {
                         <img src="~/images/@item.ImageFilename" alt="Thumbnail" class="img-thumbnail" style="width: 100px; height: auto;" />
                     }
                 </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CreateDate)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.DiscussionId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.DiscussionId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.DiscussionId">Delete</a>
-            </td>
-        </tr>
-}
+                <td>@Html.DisplayFor(modelItem => item.CreateDate)</td>
+                <td>
+                    <!-- Show Edit and Delete buttons only if the logged-in user owns the discussion -->
+                    @if (item.ApplicationUserId == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value)
+                    {
+                        <a asp-action="Edit" asp-route-id="@item.DiscussionId" class="btn btn-warning btn-sm">Edit</a>
+                        <a asp-action="Delete" asp-route-id="@item.DiscussionId" class="btn btn-danger btn-sm">Delete</a>
+                    }
+                    <a asp-action="Details" asp-route-id="@item.DiscussionId" class="btn btn-info btn-sm">Details</a>
+                </td>
+            </tr>
+        }
     </tbody>
 </table>

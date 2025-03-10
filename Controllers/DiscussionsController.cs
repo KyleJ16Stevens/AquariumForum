@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using AquariumForum.Data;
@@ -12,7 +11,7 @@ using AquariumForum.Areas.Identity.Data;
 
 namespace AquariumForum.Controllers
 {
-    [Authorize] // Require authentication for all actions
+    [Authorize] // Restrict access to authenticated users only
     public class DiscussionsController : Controller
     {
         private readonly AquariumContext _context;
@@ -27,10 +26,10 @@ namespace AquariumForum.Controllers
         // GET: Discussions (My Threads)
         public async Task<IActionResult> Index()
         {
-            var userId = _userManager.GetUserId(User); // Get logged-in user ID
+            var userId = _userManager.GetUserId(User);
             var userThreads = await _context.Discussions
-                .Where(d => d.UserId == userId) // Only show threads belonging to the logged-in user
-                .OrderByDescending(d => d.CreateDate) // Newest first
+                .Where(d => d.ApplicationUserId == userId)
+                .OrderByDescending(d => d.CreateDate)
                 .ToListAsync();
 
             return View(userThreads);
@@ -47,6 +46,7 @@ namespace AquariumForum.Controllers
 
             var discussion = await _context.Discussions
                 .Include(d => d.Comments)
+                .Include(d => d.User)
                 .FirstOrDefaultAsync(m => m.DiscussionId == id);
 
             if (discussion == null)
@@ -70,7 +70,7 @@ namespace AquariumForum.Controllers
         {
             if (ModelState.IsValid)
             {
-                discussion.UserId = _userManager.GetUserId(User); // Assign logged-in user ID
+                discussion.ApplicationUserId = _userManager.GetUserId(User);
                 discussion.CreateDate = DateTime.Now;
 
                 if (imageFile != null && imageFile.Length > 0)
@@ -107,14 +107,25 @@ namespace AquariumForum.Controllers
                 return NotFound();
             }
 
-            var discussion = await _context.Discussions.FindAsync(id);
-            if (discussion == null || discussion.UserId != _userManager.GetUserId(User))
+            var discussion = await _context.Discussions
+                .Include(d => d.User) 
+                .FirstOrDefaultAsync(d => d.DiscussionId == id);
+
+            if (discussion == null)
             {
-                return Forbid(); // Prevent editing if not the owner
+                return NotFound();
+            }
+
+            // ensure only the owner can edit
+            var loggedInUserId = _userManager.GetUserId(User);
+            if (discussion.ApplicationUserId != loggedInUserId)
+            {
+                return Forbid(); // Prevent unauthorized access
             }
 
             return View(discussion);
         }
+
 
         // POST: Discussions/Edit/5
         [HttpPost]
@@ -126,15 +137,29 @@ namespace AquariumForum.Controllers
                 return NotFound();
             }
 
-            if (discussion.UserId != _userManager.GetUserId(User))
+            //Fetch the original discussion from the database
+            var existingDiscussion = await _context.Discussions.FindAsync(id);
+
+            if (existingDiscussion == null)
             {
-                return Forbid(); // Ensure only the owner can edit
+                return NotFound();
+            }
+
+            // Ensure only the owner can edit
+            var loggedInUserId = _userManager.GetUserId(User);
+            if (existingDiscussion.ApplicationUserId != loggedInUserId)
+            {
+                return Forbid(); // Prevent unauthorized editing
             }
 
             if (ModelState.IsValid)
             {
                 try
                 {
+                    // Keep the original ApplicationUserId (don't override it)
+                    discussion.ApplicationUserId = existingDiscussion.ApplicationUserId;
+                    discussion.CreateDate = existingDiscussion.CreateDate; // Preserve original date
+
                     if (imageFile != null && imageFile.Length > 0)
                     {
                         var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
@@ -151,9 +176,10 @@ namespace AquariumForum.Controllers
                             await imageFile.CopyToAsync(fileStream);
                         }
 
-                        if (!string.IsNullOrEmpty(discussion.ImageFilename))
+                        // Delete old image if it exists
+                        if (!string.IsNullOrEmpty(existingDiscussion.ImageFilename))
                         {
-                            var oldImagePath = Path.Combine(uploadsFolder, discussion.ImageFilename);
+                            var oldImagePath = Path.Combine(uploadsFolder, existingDiscussion.ImageFilename);
                             if (System.IO.File.Exists(oldImagePath))
                             {
                                 System.IO.File.Delete(oldImagePath);
@@ -162,8 +188,13 @@ namespace AquariumForum.Controllers
 
                         discussion.ImageFilename = uniqueFilename;
                     }
+                    else
+                    {
+                        //Keep the original image if no new one was uploaded
+                        discussion.ImageFilename = existingDiscussion.ImageFilename;
+                    }
 
-                    _context.Update(discussion);
+                    _context.Entry(existingDiscussion).CurrentValues.SetValues(discussion);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -193,9 +224,9 @@ namespace AquariumForum.Controllers
             var discussion = await _context.Discussions
                 .FirstOrDefaultAsync(m => m.DiscussionId == id);
 
-            if (discussion == null || discussion.UserId != _userManager.GetUserId(User))
+            if (discussion == null || discussion.ApplicationUserId != _userManager.GetUserId(User))
             {
-                return Forbid(); // Prevent deletion if not the owner
+                return Forbid();
             }
 
             return View(discussion);
@@ -208,7 +239,7 @@ namespace AquariumForum.Controllers
         {
             var discussion = await _context.Discussions.FindAsync(id);
 
-            if (discussion == null || discussion.UserId != _userManager.GetUserId(User))
+            if (discussion == null || discussion.ApplicationUserId != _userManager.GetUserId(User))
             {
                 return Forbid();
             }

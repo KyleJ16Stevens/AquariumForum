@@ -28,15 +28,6 @@
                         <p class="card-text">
                             <small class="text-muted">Created on @discussion.CreateDate.ToString("MMM dd, yyyy hh:mm tt")</small>
                         </p>
-                        <div class="mt-3">
-                            <a asp-controller="Discussions" asp-action="Edit" asp-route-id="@discussion.DiscussionId" class="btn btn-warning btn-sm">Edit</a>
-
-                            <form asp-controller="Discussions" asp-action="Delete" asp-route-id="@discussion.DiscussionId" method="post" class="d-inline">
-                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this discussion?');">
-                                    Delete
-                                </button>
-                            </form>
-                        </div>
                     </div>
                 </div>
             </div>
