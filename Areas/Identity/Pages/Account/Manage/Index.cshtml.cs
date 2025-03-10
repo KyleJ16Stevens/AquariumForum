@@ -4,9 +4,13 @@
 
 using System;
 using System.ComponentModel.DataAnnotations;
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.IO;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using AquariumForum.Areas.Identity.Data;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -26,39 +30,31 @@ namespace AquariumForum.Areas.Identity.Pages.Account.Manage
             _signInManager = signInManager;
         }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         public string Username { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         [TempData]
         public string StatusMessage { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         [BindProperty]
         public InputModel Input { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         public class InputModel
         {
-            /// <summary>
-            ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-            ///     directly from your code. This API may change or be removed in future releases.
-            /// </summary>
+            [Required]
+            [Display(Name = "Full Name")]
+            public string Name { get; set; }
+
+            [Display(Name = "Location")]
+            public string Location { get; set; }
+
+            [Display(Name = "Profile Picture")]
+            public IFormFile? ImageFile { get; set; } // Optional image upload
+
+            public string? ImageFilename { get; set; } // Stores profile picture filename
+
             [Phone]
-            [Display(Name = "Phone number")]
-            public string PhoneNumber { get; set; }
+            [Display(Name = "Phone Number")]
+            public string? PhoneNumber { get; set; } // Fixes missing PhoneNumber issue
         }
 
         private async Task LoadAsync(User user)
@@ -70,7 +66,10 @@ namespace AquariumForum.Areas.Identity.Pages.Account.Manage
 
             Input = new InputModel
             {
-                PhoneNumber = phoneNumber
+                Name = user.Name,
+                Location = user.Location,
+                ImageFilename = user.ImageFilename, // Load existing profile image filename
+                PhoneNumber = phoneNumber // Load existing phone number
             };
         }
 
@@ -100,17 +99,41 @@ namespace AquariumForum.Areas.Identity.Pages.Account.Manage
                 return Page();
             }
 
-            var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
-            if (Input.PhoneNumber != phoneNumber)
+            user.Name = Input.Name;
+            user.Location = Input.Location;
+
+            // Handle Profile Picture Upload
+            if (Input.ImageFile != null)
+            {
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "profile_pics");
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                }
+
+                var uniqueFilename = Guid.NewGuid().ToString() + Path.GetExtension(Input.ImageFile.FileName);
+                var filePath = Path.Combine(uploadsFolder, uniqueFilename);
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await Input.ImageFile.CopyToAsync(fileStream);
+                }
+
+                user.ImageFilename = uniqueFilename;
+            }
+
+            // Update phone number if it exists in InputModel
+            if (!string.IsNullOrEmpty(Input.PhoneNumber) && Input.PhoneNumber != user.PhoneNumber)
             {
                 var setPhoneResult = await _userManager.SetPhoneNumberAsync(user, Input.PhoneNumber);
                 if (!setPhoneResult.Succeeded)
                 {
-                    StatusMessage = "Unexpected error when trying to set phone number.";
+                    StatusMessage = "Unexpected error when trying to update phone number.";
                     return RedirectToPage();
                 }
             }
 
+            await _userManager.UpdateAsync(user);
             await _signInManager.RefreshSignInAsync(user);
             StatusMessage = "Your profile has been updated";
             return RedirectToPage();

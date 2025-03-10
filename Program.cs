@@ -33,6 +33,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapRazorPages();
 app.MapStaticAssets();
 
 app.MapControllerRoute(
